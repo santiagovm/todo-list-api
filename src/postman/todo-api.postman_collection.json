@@ -1,0 +1,711 @@
+{
+	"info": {
+		"_postman_id": "f3801832-6dd9-4641-bbec-1c0a4ef2c32e",
+		"name": "To-Do List API",
+		"description": "# coding exercise to create a To-Do List API\n\n## Software Requirements Specification\n\n### Purpose\n\nThe purpose of this document is to build a RESTful API to support a to-do list application.\n\n### Project Scope\n\nThe API should expose methods for creating and managing to-do lists, adding/editing/deleting items from to-do lists, mark to-do list items as completed. The API should have an in-memory persistence layer that could be easily replaced with another, more permanent provider.\n\n### Product Perspective\n\nThe API will expose two controllers as RESTful resources: One will handle ToDoList objects, another will handle ToDoListItem objects.\n\nEnd user should be able to create, edit and delete ToDoList objects. Also the end user should be able to retrieve all ToDoList objects associated with him/her.\n\nEnd user should also be able to add or remove ToDoListItem objects to individual ToDoList objects, edit the list items and mark them as completed.\n\n#### Tools\n\nMicrosoft ASP.NET WebAPI 2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get todo lists",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7ac38f94-9a05-4b51-b4da-f742b1a977c2",
+						"exec": [
+							"// check response status",
+							"",
+							"pm.test(\"status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// check response content type",
+							"",
+							"pm.test(\"content type is json\", function () {",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8; v=1.0\");",
+							"})",
+							"",
+							"// check link header",
+							"",
+							"pm.test(\"link header is present\", function () {",
+							"    ",
+							"    var url = pm.variables.get(\"url\");",
+							"    ",
+							"    var linkHeader = `<${url}/lists?page=1&per_page=20>; rel=\"first\", <${url}/lists?page=1&per_page=20>; rel=\"prev\", <${url}/lists?page=3&per_page=20>; rel=\"next\", <${url}/lists?page=3&per_page=20>; rel=\"last\"`;",
+							"    ",
+							"    pm.response.to.be.header(\"Link\", linkHeader);",
+							"})",
+							"",
+							"// check json schema",
+							"",
+							"var schema = {",
+							"    \"type\": \"array\",",
+							"    \"items\": {",
+							"        \"type\": \"object\",",
+							"        \"properties\": {",
+							"            \"id\": {",
+							"                \"type\": \"integer\"",
+							"            },",
+							"            \"name\": {",
+							"                \"type\": \"string\"",
+							"            },",
+							"            \"last_updated_at\": {",
+							"                \"type\": \"string\"",
+							"            }",
+							"        },",
+							"        \"additionalProperties\": false,",
+							"        \"required\": [\"id\", \"name\", \"last_updated_at\"]",
+							"    }",
+							"};",
+							"",
+							"var data = pm.response.json();",
+							"",
+							"tests[\"json schema is valid\"] = tv4.validate(data, schema);",
+							"",
+							"console.log(tv4.error);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{api-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/lists?page_number=4&page_size=1",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"lists"
+					],
+					"query": [
+						{
+							"key": "page_number",
+							"value": "4"
+						},
+						{
+							"key": "page_size",
+							"value": "1"
+						}
+					]
+				},
+				"description": "retrieve all todo lists associated with user"
+			},
+			"response": [
+				{
+					"name": "multiple results - multiple pages - middle page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists?page=2&per_page=20",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Link",
+							"value": "<{{url}}/lists?page=1&per_page=20>; rel=\"first\", <{{url}}/lists?page=1&per_page=20>; rel=\"prev\", <{{url}}/lists?page=3&per_page=20>; rel=\"next\", <{{url}}/lists?page=3&per_page=20>; rel=\"last\"",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Foo",
+							"value": "Bar",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				},
+				{
+					"name": "empty result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "No Content",
+					"code": 204,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				},
+				{
+					"name": "one result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\"\n    }\n]"
+				},
+				{
+					"name": "multiple results - one page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Encoding",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				}
+			]
+		},
+		{
+			"name": "get todo lists with wrong media type",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7ac38f94-9a05-4b51-b4da-f742b1a977c2",
+						"exec": [
+							"// check response status",
+							"",
+							"pm.test(\"status code is 406\", function () {",
+							"    pm.response.to.have.status(406);",
+							"});",
+							"",
+							"// check link header",
+							"",
+							"pm.test(\"link header is present\", function () {",
+							"    ",
+							"    var url = pm.variables.get(\"url\");",
+							"    ",
+							"    var linkHeader = `<${url}/lists?page=1&per_page=20>; rel=\"first\", <${url}/lists?page=1&per_page=20>; rel=\"prev\", <${url}/lists?page=3&per_page=20>; rel=\"next\", <${url}/lists?page=3&per_page=20>; rel=\"last\"`;",
+							"    ",
+							"    pm.response.to.be.header(\"Link\", linkHeader);",
+							"})",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{api-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"description": "using pdf instead of json",
+						"key": "Accept",
+						"type": "text",
+						"value": "application/pdf"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/lists?page=2&per_page=20",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"lists"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "2"
+						},
+						{
+							"key": "per_page",
+							"value": "20"
+						}
+					]
+				},
+				"description": "retrieve all todo lists associated with user"
+			},
+			"response": [
+				{
+					"name": "multiple results - multiple pages - middle page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists?page=2&per_page=20",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Link",
+							"value": "<{{url}}/lists?page=1&per_page=20>; rel=\"first\", <{{url}}/lists?page=1&per_page=20>; rel=\"prev\", <{{url}}/lists?page=3&per_page=20>; rel=\"next\", <{{url}}/lists?page=3&per_page=20>; rel=\"last\"",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Foo",
+							"value": "Bar",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				},
+				{
+					"name": "multiple results - one page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Encoding",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				},
+				{
+					"name": "one result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\"\n    }\n]"
+				},
+				{
+					"name": "empty result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "No Content",
+					"code": 204,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				}
+			]
+		},
+		{
+			"name": "get todo lists with etag",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7ac38f94-9a05-4b51-b4da-f742b1a977c2",
+						"exec": [
+							"// check response status",
+							"",
+							"pm.test(\"status code is 304\", function () {",
+							"    pm.response.to.have.status(304);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{api-token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "If-None-Match",
+						"value": "\"ITg/h2IEEw+oMRA5ieKMMLGoO/ed1fH7hBvvouDOhN4=\"",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/lists?page=2&per_page=20",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"lists"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "2"
+						},
+						{
+							"key": "per_page",
+							"value": "20"
+						}
+					]
+				},
+				"description": "retrieve all todo lists associated with user"
+			},
+			"response": [
+				{
+					"name": "multiple results - multiple pages - middle page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists?page=2&per_page=20",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Link",
+							"value": "<{{url}}/lists?page=1&per_page=20>; rel=\"first\", <{{url}}/lists?page=1&per_page=20>; rel=\"prev\", <{{url}}/lists?page=3&per_page=20>; rel=\"next\", <{{url}}/lists?page=3&per_page=20>; rel=\"last\"",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "Foo",
+							"value": "Bar",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				},
+				{
+					"name": "empty result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "No Content",
+					"code": 204,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				},
+				{
+					"name": "one result",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\"\n    }\n]"
+				},
+				{
+					"name": "multiple results - one page",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Encoding",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/lists",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"lists"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"foo list\",\n        \"last_updated_at\": \"2014-11-07T22:01:45Z\" \n    },\n    {\n        \"id\": 2,\n        \"name\": \"bar list\",\n        \"last_updated_at\": \"2015-12-08T11:02:56Z\" \n    }\n]"
+				}
+			]
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/membership?username=foo&password=bar",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"membership"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "foo"
+						},
+						{
+							"key": "password",
+							"value": "bar"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
